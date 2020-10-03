@@ -7,7 +7,8 @@ from nltk.tokenize import word_tokenize
 from scipy.spatial.distance import cosine
 import re
 
-fname = '/Users/samdeverett/Documents/Citadel_Datathon/word2vec.kv'
+fname = '../data/word2vec.kv'
+# fname = '/Users/samdeverett/Documents/Citadel_Datathon/word2vec.kv'
 model = KeyedVectors.load(fname, mmap='r')
 wordVectors = model.wv
 
