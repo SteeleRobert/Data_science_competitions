@@ -3,6 +3,11 @@ import numpy as np
 from gensim.models import KeyedVectors
 from moralWordsDict import moralWordsDict
 
+### DOWNLOAD STOP WORDS - NLTK - FOR LOOP
+
+### ALSO, FUNCTION TAKES IN LIST OF WORDS (EX: ["I", "LOVE", "CITADEL"])
+### MAYBE IT SHOULD BE MORE FLEXIBLE (I.E. TAKE IN DATAFRAME (BAG OF WORDS))
+
 
 moralWords = list(moralWordsDict.keys())
 
@@ -45,7 +50,6 @@ def getWordMapping(word):
             break
     # Word2Vec
     else:
-        ### THRESHOLD???
         wordVectors = model.wv
         if word in wordVectors:
             distancesToWord = {}
@@ -55,18 +59,19 @@ def getWordMapping(word):
                 distancesToWord[moralWord] = model.similarity(moralWord, word)
             closestWordVector = max(distancesToWord, key=distancesToWord.get)
             distToClosestWV = distancesToWord[closestWordVector]
-            if closestWordVector not in moralWords:
-                for k, v in approxWordDict.items():
-                    if v == closestWordVector:
-                        closestWordVector = k
-                        break
-            morals = moralWordsDict[closestWordVector]
-            for moral in morals:
-                if moral % 2 == 1:
-                    value = 1 * distToClosestWV
-                else:
-                    value = -1 * distToClosestWV
-                wordMapping = updateMapping(wordMapping, moral, value)
+            if distToClosestWV > 0.9:
+                if closestWordVector not in moralWords:
+                    for k, v in approxWordDict.items():
+                        if v == closestWordVector:
+                            closestWordVector = k
+                            break
+                morals = moralWordsDict[closestWordVector]
+                for moral in morals:
+                    if moral % 2 == 1:
+                        value = 1 * distToClosestWV
+                    else:
+                        value = -1 * distToClosestWV
+                    wordMapping = updateMapping(wordMapping, moral, value)
     return wordMapping
 
 def updateMapping(mapping, moral, value):
