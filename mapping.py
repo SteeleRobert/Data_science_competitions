@@ -11,7 +11,12 @@ from moralWordsDict import moralWordsDict
 
 moralWords = list(moralWordsDict.keys())
 
-fname = '/Users/samdeverett/Documents/Citadel_Datathon/word2vec.kv'
+## Sam
+# fname = '/Users/samdeverett/Documents/Citadel_Datathon/word2vec.kv'
+
+## Raj
+fname = '../data/word2vec.kv'
+
 model = KeyedVectors.load(fname, mmap='r')
 
 
