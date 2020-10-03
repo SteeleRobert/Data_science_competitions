@@ -112,7 +112,7 @@ def getBagMapping(bagOfWords):
     for word in bagOfWords:
         bagMapping += getWordMapping(word)
     bagMapping /= np.sum(np.abs(bagMapping))
-    return bagMapping
+    return bagMapping[:5]
 
 def getWordMapping(word):
     wordMapping = initializeMapping()
@@ -134,7 +134,7 @@ def getWordMapping(word):
             categories = np.arange(1, 12)
             i = 0
             for moralCategoryVector in moralCategoryVectors:
-                distancesToWord[categories[i]] = cosine(wordVectors[moralWord], moralCategoryVector)
+                distancesToWord[categories[i]] = cosine(wordVectors[word], moralCategoryVector)
                 i += 1
             for category in categories:
                 distancesToCategory = distancesToWord[category]
