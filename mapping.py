@@ -2,6 +2,9 @@
 import numpy as np
 from gensim.models import KeyedVectors
 from moralWordsDict import moralWordsDict
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+import re
 
 ### DOWNLOAD STOP WORDS - NLTK - FOR LOOP
 
@@ -10,13 +13,9 @@ from moralWordsDict import moralWordsDict
 
 
 moralWords = list(moralWordsDict.keys())
+stop_words = set(stopwords.words('english'))
 
-## Sam
-# fname = '/Users/samdeverett/Documents/Citadel_Datathon/word2vec.kv'
-
-## Raj
-fname = '../data/word2vec.kv'
-
+fname = '/Users/samdeverett/Documents/Citadel_Datathon/word2vec.kv'
 model = KeyedVectors.load(fname, mmap='r')
 
 
@@ -32,11 +31,16 @@ def initializeMapping():
     '''
     return np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
 
+def getBagOWords(text):
+    toks = word_tokenize(text)
+    return [w for w in toks if not w in stop_words]
+
+
 def getBagMapping(bagOfWords):
     bagMapping = initializeMapping()
     for word in bagOfWords:
         bagMapping += getWordMapping(word)
-    bagMapping /= len(bagOfWords)
+    bagMapping /= np.sum(np.abs(bagMapping))
     return bagMapping
 
 def getWordMapping(word):
@@ -160,3 +164,5 @@ approxWordDict = {
 # print(getWordMapping('pain'))
 # print(getWordMapping('suffering'))
 # print(getBagMapping(['pain', 'suffering']))
+
+
