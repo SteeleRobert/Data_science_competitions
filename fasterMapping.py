@@ -1,4 +1,5 @@
 
+
 import numpy as np
 from gensim.models import KeyedVectors
 from moralWordsDict import moralWordsDict, morals
@@ -7,10 +8,10 @@ from nltk.tokenize import word_tokenize
 from scipy.spatial.distance import cosine
 import re
 
-fname = '../data/word2vec.kv'
-# fname = '/Users/samdeverett/Documents/Citadel_Datathon/word2vec.kv'
+fname = 'data/word2vec.kv'
 model = KeyedVectors.load(fname, mmap='r')
 wordVectors = model.wv
+
 
 moralWords = list(moralWordsDict.keys())
 stop_words = set(stopwords.words('english'))
@@ -102,11 +103,41 @@ def initializeMapping():
         4 = Purity
         5 = Morality
     '''
-    return np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+    return np.array([0.0, 0.0, 0.0, 0.0, 0.0])
 
 def getBagOWords(text):
-    toks = word_tokenize(re.sub(r'[^a-zA-Z0-9_. ]', '', text).lower())
+    toks = word_tokenize(re.sub(r'[^a-zA-Z0-9 ]', '', text).lower())
     return [w for w in toks if not w in stop_words]
+
+def getBagMappingAvg(bagOWords):
+    bagMapping = initializeMapping()
+    bagOWords = [w for w in bagOWords if w in wordVectors.vocab]
+    if(len(bagOWords) > 0):
+        bagWordVectors = [wordVectors[word] for word in bagOWords]
+        bagVector = np.average(bagWordVectors, axis=0)
+        distancesToBag = {}
+        i = 1
+        for moralCategoryVector in moralCategoryVectors:
+            distancesToBag[i] = cosine(bagVector, moralCategoryVector)
+            i += 1
+
+        for i in range(1,11, 2):
+            distanceToPosCategory = distancesToBag[i]
+            distanceToNegCategory = distancesToBag[i+1]
+            value = distanceToPosCategory + -1 * distanceToNegCategory
+            bagMapping = updateMapping(bagMapping, i, value)
+    return bagMapping[:5]
+
+def getAvgDocVectors(bagOWords):
+    bagMapping = initializeMapping()
+    bagOWords = [w for w in bagOWords if w in wordVectors.vocab]
+    bagWordVectors = [np.zeros(300)]
+    if(len(bagOWords) > 0):
+        bagWordVectors = [wordVectors[word] for word in bagOWords]
+    bagVector = np.average(bagWordVectors, axis=0)
+    return bagVector
+
+
 
 def getBagMapping(bagOWords):
     bagMapping = initializeMapping()
@@ -172,6 +203,3 @@ def updateMapping(mapping, moral, value):
     return mapping
 
 
-# print(getBagMapping(['pain']))
-# print(getBagMapping(['suffering']))
-# print(getBagMapping(['pain', 'suffering']))
