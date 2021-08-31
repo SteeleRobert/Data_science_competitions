@@ -7,8 +7,7 @@ from nltk.tokenize import word_tokenize
 from scipy.spatial.distance import cosine
 import re
 
-fname = '../data/word2vec.kv'
-# fname = '/Users/samdeverett/Documents/Citadel_Datathon/word2vec.kv'
+fname = '/Users/samdeverett/Documents/Citadel_Datathon/word2vec.kv'
 model = KeyedVectors.load(fname, mmap='r')
 wordVectors = model.wv
 
@@ -75,6 +74,7 @@ def getMoralCategoryVector(category):
     '''
     Inputs
     ____
+
     category: int (1-11)
         Integer corresponding to category (see moralWordsDict)
     '''
@@ -107,43 +107,47 @@ def getBagOWords(text):
     toks = word_tokenize(re.sub(r'[^a-zA-Z0-9_. ]', '', text).lower())
     return [w for w in toks if not w in stop_words]
 
-def getBagMapping(bagOfWords):
+def getBagMapping(bagOWords):
     bagMapping = initializeMapping()
-    for word in bagOfWords:
-        bagMapping += getWordMapping(word)
+    # Moral dictionary words
+    moralBagWords = []
+    wordsUsed = []
+    for word in bagOWords:
+        for moralWord in moralWords:
+            if word.find(moralWord) == 0:
+                moralBagWords.append(moralWord)
+                wordsUsed.append(word)
+    for moralWord in moralBagWords:
+        morals = moralWordsDict[moralWord]
+        for moral in morals:
+            if moral % 2 == 1:
+                value = 1
+            else:
+                value = -1
+            bagMapping = updateMapping(bagMapping, moral, value)
+    # Bag2Vec
+    otherBagWords = [word for word in bagOWords if word not in wordsUsed]
+    if otherBagWords:
+        bagWordVectors = [wordVectors[word] for word in otherBagWords]
+        bagVector = np.average(bagWordVectors, axis=0)
+        # Distances from bag vector to moral vectors
+        distancesToBag = {}
+        categories = np.arange(1, 12)
+        i = 0
+        for moralCategoryVector in moralCategoryVectors:
+            distancesToBag[categories[i]] = cosine(bagVector, moralCategoryVector)
+            i += 1
+        # Update bag mapping
+        for category in categories:
+            distanceToCategory = distancesToBag[category]
+            if category % 2 == 1:
+                value = 1 * distanceToCategory
+            else:
+                value = -1 * distanceToCategory
+            bagMapping = updateMapping(bagMapping, category, value)
+    # Scale bag mapping
     bagMapping /= np.sum(np.abs(bagMapping))
     return bagMapping[:5]
-
-def getWordMapping(word):
-    wordMapping = initializeMapping()
-    # Moral Dictionary
-    for moralWord in moralWords:
-        if word.find(moralWord) == 0:
-            morals = moralWordsDict[moralWord]
-            for moral in morals:
-                if moral % 2 == 1:
-                    value = 1
-                else:
-                    value = -1
-                wordMapping = updateMapping(wordMapping, moral, value)
-            break
-    # Word2Vec
-    else:
-        if word in wordVectors:
-            distancesToWord = {}
-            categories = np.arange(1, 12)
-            i = 0
-            for moralCategoryVector in moralCategoryVectors:
-                distancesToWord[categories[i]] = cosine(wordVectors[word], moralCategoryVector)
-                i += 1
-            for category in categories:
-                distancesToCategory = distancesToWord[category]
-                if category % 2 == 1:
-                    value = 1 * distancesToCategory
-                else:
-                    value = -1 * distancesToCategory
-                wordMapping = updateMapping(wordMapping, category, value)
-    return wordMapping
 
 def updateMapping(mapping, moral, value):
     # Harm
@@ -167,6 +171,6 @@ def updateMapping(mapping, moral, value):
     return mapping
 
 
-# print(getWordMapping('pain'))
-# print(getWordMapping('suffering'))
+# print(getBagMapping(['pain']))
+# print(getBagMapping(['suffering']))
 # print(getBagMapping(['pain', 'suffering']))
