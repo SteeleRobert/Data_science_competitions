@@ -101,11 +101,26 @@ def initializeMapping():
         4 = Purity
         5 = Morality
     '''
-    return np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+    return np.array([0.0, 0.0, 0.0, 0.0, 0.0])
 
 def getBagOWords(text):
     toks = word_tokenize(re.sub(r'[^a-zA-Z0-9_. ]', '', text).lower())
     return [w for w in toks if not w in stop_words]
+
+def getBagMappingAvg(bagOWords):
+    bagWordVectors = [wordVectors[word] for word in bagOWords]
+    bagVector = np.average(bagWordVectors, axis=0)
+    for moralCategoryVector in moralCategoryVectors:
+        distancesToBag[categories[i]] = cosine(bagVector, moralCategoryVector)
+
+    for i in range(1,11, 2):
+        distanceToPosCategory = distancesToBag[categories[i]]
+        distanceToNegCategory = distancesToBag[categories[i+1]]
+        value = distanceToPosCategory + -1 * distanceToNegCategory
+        print(value)
+        bagMapping = updateMapping(bagMapping, category, value)
+
+
 
 def getBagMapping(bagOWords):
     bagMapping = initializeMapping()
@@ -171,6 +186,5 @@ def updateMapping(mapping, moral, value):
     return mapping
 
 
-# print(getBagMapping(['pain']))
-# print(getBagMapping(['suffering']))
-# print(getBagMapping(['pain', 'suffering']))
+sent = "A cowboy doll is profoundly threatened and jealous when a new spaceman figure supplants him as top toy in a boy's room."
+getBagMappingAvg(getBagOWords(sent))
