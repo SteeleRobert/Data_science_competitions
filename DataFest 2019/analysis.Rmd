@@ -1,0 +1,53 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r}
+library(ggplot2)
+library(lubridate)
+
+df1 <- read.csv('rpe.csv')
+df2 <- read.csv('wellness.csv')
+
+df1$SessionType = factor(df1$SessionType)
+
+df2$PlayerID = factor(df2$PlayerID)
+#df2$Fatigue = factor(df2$Fatigue)
+
+df2$Date <- ymd(df2$Date)
+df1$Date <- ymd(df1$Date)
+
+```
+
+
+```{r}
+ggplot(df1, aes(x= df1$SessionType, y=df1$SessionLoad, fill=df1$SessionType)) +
+  geom_boxplot()
+
+ggplot(df1, aes(x= df1$SessionType, y=df1$RPE, fill=df1$SessionType)) +
+  geom_boxplot()
+```
+
+
+```{r}
+dftemp = subset(df2, PlayerID == 1)
+dfweight = subset(df1, SessionType == 'Game')
+
+ggplot(dftemp, aes(x = dftemp$Date, y = dftemp$Fatigue, color = PlayerID)) +
+  geom_line() +
+  geom_vline(xintercept = dfweight$Date, linetype = 3)
+
+ggsave("Category_3 Frequency by Time.png", width = 25, height = 10)
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+
